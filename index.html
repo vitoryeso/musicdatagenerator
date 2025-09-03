@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Criador de Loops - Movimento Circular Elástico</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app__header">
+        <h1>Criador de Loops: Movimento Circular com Elasticidade e Inércia</h1>
+        <p class="subtitle">Ajuste os parâmetros, visualize e exporte o loop.</p>
+      </header>
+
+      <main class="app__main">
+        <section class="panel panel--controls">
+          <div class="grid">
+            <label class="field">
+              <span>Duração (s)</span>
+              <input id="duration" type="number" step="0.1" min="0.1" value="2" />
+            </label>
+
+            <label class="field">
+              <span>Quadros por loop</span>
+              <input id="frames" type="number" step="1" min="8" value="60" />
+            </label>
+
+            <label class="field">
+              <span>Raio (px)</span>
+              <input id="radius" type="number" step="1" min="1" value="120" />
+            </label>
+
+            <label class="field">
+              <span>Inércia (I)</span>
+              <input id="inertia" type="number" step="0.01" min="0.001" value="1" />
+            </label>
+
+            <label class="field">
+              <span>Rigidez (k)</span>
+              <input id="stiffness" type="number" step="0.1" min="0.01" value="20" />
+            </label>
+
+            <label class="field">
+              <span>Fluidez (amortecimento)</span>
+              <input id="fluidity" type="range" min="0" max="1" step="0.01" value="0.8" />
+              <small id="fluidityValue">0.80</small>
+            </label>
+
+            <label class="field">
+              <span>Amolecimento</span>
+              <input id="softness" type="range" min="0" max="1" step="0.01" value="0.3" />
+              <small id="softnessValue">0.30</small>
+            </label>
+
+            <label class="field">
+              <span>Períodos de aquecimento</span>
+              <input id="warmup" type="number" step="1" min="0" value="6" />
+            </label>
+          </div>
+
+          <div class="buttons">
+            <button id="btn-generate">Gerar Loop</button>
+            <button id="btn-play">Pausar</button>
+            <button id="btn-export-css">Exportar CSS</button>
+            <button id="btn-export-json">Exportar JSON</button>
+          </div>
+
+          <details class="details">
+            <summary>Dica sobre parâmetros</summary>
+            <ul>
+              <li><b>Fluidez</b>: controla o amortecimento relativo (0 a 1+). Valores maiores suavizam.</li>
+              <li><b>Amolecimento</b>: reduz rigidez quando a velocidade angular aumenta.</li>
+              <li><b>Inércia</b> e <b>Rigidez</b>: definem a dinâmica (oscilação/seguimento).</li>
+            </ul>
+          </details>
+        </section>
+
+        <section class="panel panel--preview">
+          <canvas id="preview" width="500" height="500"></canvas>
+          <div class="readout">
+            <span id="readout-time">t=0.00s</span>
+            <span id="readout-theta">θ=0.00 rad</span>
+          </div>
+        </section>
+      </main>
+
+      <section class="panel panel--output">
+        <h2>Saída (CSS/JSON)</h2>
+        <textarea id="output" spellcheck="false" readonly></textarea>
+      </section>
+
+      <footer class="app__footer">
+        <span>Feito com física de mola amortecida (torcional) e momento de inércia.</span>
+      </footer>
+    </div>
+
+    <script src="./main.js" defer></script>
+  </body>
+  </html>
+
