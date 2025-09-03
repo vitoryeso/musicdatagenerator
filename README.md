@@ -1,101 +1,84 @@
-# Simulador de Movimento Circular com Loops
+# Simulador de Movimento Circular com Física Avançada
 
-Um simulador interativo de movimento circular que incorpora leis físicas de elasticidade, momento de inércia, fluidez e amortecimento para criar padrões de movimento complexos e loops naturais.
+Um simulador interativo que demonstra movimento circular com física realista, incluindo elasticidade, momento de inércia, fluidez e amolecimento.
 
-## Características Principais
+## 🎯 Características
 
-### Física Implementada
-- **Elasticidade**: Força de restauração que tenta manter o objeto no raio base
-- **Momento de Inércia**: Afeta a conservação do momento angular durante mudanças de raio
-- **Amortecimento**: Reduz gradualmente a energia do sistema
-- **Fluidez**: Controla a suavidade das transições de movimento
+- **Física Realista**: Implementa leis de elasticidade (Lei de Hooke) e momento de inércia
+- **Parâmetros Ajustáveis**: Controle total sobre todos os aspectos físicos do movimento
+- **Efeitos Visuais**: Trilha de movimento, deformação do objeto, partículas de fluidez
+- **Interação em Tempo Real**: Clique e arraste para perturbar o movimento
+- **Interface Moderna**: Design responsivo com controles intuitivos
 
-### Funcionalidades
-- Visualização em tempo real da trajetória do objeto
-- Vetores de velocidade e aceleração visíveis
-- Controles interativos via sliders para todos os parâmetros
-- Informações físicas em tempo real (raio, velocidade, energia cinética)
-- Criação natural de loops e padrões complexos
+## 🚀 Como Usar
 
-## Como Usar
+1. Abra o arquivo `index.html` em um navegador web moderno
+2. Use os controles deslizantes para ajustar os parâmetros:
+   - **Raio da Órbita**: Distância do centro de rotação
+   - **Velocidade Angular**: Velocidade de rotação
+   - **Elasticidade**: Rigidez da "mola" que mantém o objeto na órbita
+   - **Momento de Inércia**: Resistência a mudanças no movimento rotacional
+   - **Fluidez**: Suavidade do movimento e transições
+   - **Amolecimento**: Deformação do objeto baseada na velocidade
+   - **Massa**: Massa do objeto (afeta inércia e força)
+   - **Amortecimento**: Perda gradual de energia
 
-### Instalação
-```bash
-pip install -r requirements.txt
+## 🎮 Controles
+
+### Mouse
+- **Clique**: Adiciona perturbação na direção do clique
+- **Arrastar**: Controla diretamente a posição do objeto
+
+### Teclado
+- **Espaço**: Pausar/Continuar simulação
+- **R**: Reiniciar simulação
+- **P**: Adicionar perturbação aleatória
+
+## 🔧 Física Implementada
+
+### Lei de Hooke
 ```
-
-### Execução
-```bash
-python circular_motion_simulator.py
+F = -k * x
 ```
+Onde k é a constante elástica e x é o deslocamento.
 
-### Controles Interativos
+### Momento de Inércia
+```
+I = m * r²
+```
+Afeta a resistência do objeto a mudanças na velocidade angular.
 
-#### Sliders Disponíveis:
-- **Elasticidade (0.1-1.0)**: Controla a força que tenta manter o raio base
-- **Amortecimento (0.0-0.1)**: Reduz a energia do sistema ao longo do tempo
-- **Fluidez (0.1-1.0)**: Suaviza as transições de movimento
-- **Momento de Inércia (0.1-2.0)**: Afeta como o objeto responde a mudanças de raio
-- **Velocidade Inicial (1.0-10.0)**: Velocidade inicial do movimento
-- **Raio Base (0.5-4.0)**: Raio de referência do movimento circular
+### Amortecimento Viscoso
+```
+F_damping = -b * v
+```
+Simula perda de energia por atrito.
 
-#### Botões:
-- **Reset**: Reinicia a simulação com os parâmetros atuais
-- **Limpar**: Remove o rastro da trajetória
+## 📊 Visualizações
 
-## Física por Trás do Simulador
+- **Objeto Principal**: Círculo verde que se deforma com base na velocidade
+- **Trilha**: Mostra o caminho percorrido
+- **Vetores**: Visualização de forças e velocidades (amarelo = velocidade, vermelho = força)
+- **Partículas de Fluidez**: Indicam o nível de fluidez do movimento
+- **Efeito Glow**: Intensidade baseada na velocidade
 
-### Forças Implementadas
+## 🛠️ Estrutura do Código
 
-1. **Força Centrípeta**: `F_c = m * ω² * r`
-2. **Força Elástica**: `F_e = -k * (r - r_0)` onde k é o coeficiente de elasticidade
-3. **Força de Amortecimento**: `F_d = -c * v_r` onde c é o coeficiente de amortecimento
+- `index.html`: Interface e estrutura
+- `physics.js`: Motor de física com todas as leis implementadas
+- `renderer.js`: Sistema de renderização e efeitos visuais
+- `main.js`: Lógica principal e controles
 
-### Conservação do Momento Angular
-O momento angular `L = I * ω` é modificado pelo momento de inércia ajustável, permitindo diferentes comportamentos quando o raio muda.
+## 📈 Exemplos de Uso
 
-### Criação de Loops
-Os loops surgem naturalmente da interação entre:
-- A força centrípeta tentando manter o movimento circular
-- A força elástica tentando restaurar o raio original
-- O amortecimento reduzindo a energia
-- A fluidez suavizando as transições
+1. **Movimento Elástico**: Aumente a elasticidade para ver o objeto "quicar" de volta à órbita
+2. **Alta Inércia**: Aumente o momento de inércia para movimento mais estável
+3. **Objeto Fluido**: Maximize fluidez e amolecimento para movimento orgânico
+4. **Baixo Amortecimento**: Reduza para ver oscilações persistentes
 
-## Exemplos de Uso
+## 🔍 Observações Físicas
 
-### Movimento Circular Simples
-- Elasticidade: 0.8
-- Amortecimento: 0.01
-- Fluidez: 0.8
-- Momento de Inércia: 0.5
-
-### Loops Complexos
-- Elasticidade: 0.3
-- Amortecimento: 0.05
-- Fluidez: 0.2
-- Momento de Inércia: 1.5
-
-### Espiral Amortecida
-- Elasticidade: 0.6
-- Amortecimento: 0.08
-- Fluidez: 0.9
-- Momento de Inércia: 0.3
-
-## Visualização
-
-O simulador mostra:
-- **Linha azul**: Trajetória do objeto (rastro)
-- **Ponto vermelho**: Posição atual do objeto
-- **Linha verde**: Vetor velocidade
-- **Linha vermelha**: Vetor aceleração
-- **Painel informativo**: Parâmetros físicos em tempo real
-
-## Requisitos do Sistema
-
-- Python 3.7+
-- NumPy 1.21.0+
-- Matplotlib 3.5.0+
-
-## Autor
-
-Desenvolvido como uma demonstração interativa de física aplicada em movimento circular com parâmetros ajustáveis.
+- A energia cinética é calculada e exibida em tempo real
+- O ângulo mostra a posição angular atual
+- A deformação visual representa as forças atuando no objeto
+- O sistema conserva momento angular (com amortecimento)
