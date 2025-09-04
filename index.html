@@ -161,6 +161,9 @@
 </head>
 <body>
     <h1>Simulador de Movimento Circular com Física</h1>
+    <div style="margin: 10px 0 20px;">
+        <a href="compare.html" style="color: #ffeb3b; text-decoration: underline; font-weight: 600;">Abrir página de comparação de métodos</a>
+    </div>
     
     <div id="canvas-container">
         <canvas id="canvas" width="600" height="600"></canvas>
@@ -211,6 +214,10 @@
             <button class="btn-primary" onclick="simulation.togglePause()">Pausar/Continuar</button>
             <button class="btn-secondary" onclick="simulation.reset()">Reiniciar</button>
             <button class="btn-secondary" onclick="simulation.addPerturbation()">Perturbar</button>
+        </div>
+        <div class="button-group">
+            <a href="sim-loop.html"><button class="btn-secondary">Abrir Simulador Loop Creator</button></a>
+            <a href="sim-masks.html"><button class="btn-secondary">Abrir Simulador Masks</button></a>
         </div>
         
         <div class="info-panel" id="info-panel">

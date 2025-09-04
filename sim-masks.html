@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Masks (Frames PNG)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 16px;
+        }
+        header { width: 100%; max-width: 960px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 1.8em; }
+        a.link { color: #ffeb3b; text-decoration: underline; font-weight: 600; }
+        .container { width: 100%; max-width: 960px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .panel { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); backdrop-filter: blur(8px); }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        label { font-weight: 600; }
+        select, input[type="number"], input[type="range"] { width: 100%; }
+        img { display: block; width: 100%; max-width: 600px; height: auto; border-radius: 10px; background: #0b1220; border: 1px solid rgba(255,255,255,0.08); }
+        button { padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; }
+        .primary { background: #22c55e; color: #051b11; }
+        .secondary { background: #64748b; color: #0b1220; }
+        .note { font-size: 0.9em; color: #94a3b8; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Simulador Masks (Frames PNG)</h1>
+        <div class="row">
+            <a class="link" href="./index.html">Simulador Canvas</a>
+            <a class="link" href="./sim-loop.html">Simulador Loop Creator</a>
+            <a class="link" href="./compare.html">Comparar Métodos</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="panel">
+            <div class="grid">
+                <div>
+                    <label for="sequence">Sequência</label>
+                    <select id="sequence">
+                        <option value="circular_complex_loops">circular_complex_loops</option>
+                        <option value="square_complex_loops">square_complex_loops</option>
+                        <option value="trail_complex_loops">trail_complex_loops</option>
+                        <option value="circular_simple_circle">circular_simple_circle</option>
+                        <option value="circular_smooth_oscillation">circular_smooth_oscillation</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="fps">FPS</label>
+                    <input id="fps" type="number" min="1" max="60" step="1" value="24">
+                </div>
+                <div>
+                    <label for="frames">Frames (contagem)</label>
+                    <input id="frames" type="number" min="1" max="600" step="1" value="60">
+                </div>
+                <div>
+                    <label for="preload">Pré-carregar</label>
+                    <select id="preload">
+                        <option value="1">Sim</option>
+                        <option value="0">Não</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="loop">Loop</label>
+                    <select id="loop">
+                        <option value="1">Sim</option>
+                        <option value="0">Não</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="index">Índice</label>
+                    <input id="index" type="range" min="0" max="59" step="1" value="0">
+                </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+                <button class="primary" id="btn-play">Reproduzir</button>
+                <button class="secondary" id="btn-pause">Pausar</button>
+                <button id="btn-prev">Anterior</button>
+                <button id="btn-next">Próximo</button>
+                <button id="btn-reload">Recarregar</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <img id="viewer" src="masks/circular_complex_loops_frame_0000.png" alt="frame">
+            <div class="note" style="margin-top:8px;">Carrega frames de <code>masks/</code> conforme o padrão: <code>NAME_frame_####.png</code>.</div>
+        </div>
+    </div>
+
+    <script>
+        const viewer = document.getElementById('viewer');
+        const sequenceEl = document.getElementById('sequence');
+        const fpsEl = document.getElementById('fps');
+        const totalEl = document.getElementById('frames');
+        const preloadEl = document.getElementById('preload');
+        const loopEl = document.getElementById('loop');
+        const indexEl = document.getElementById('index');
+
+        let timer = null;
+        let current = 0;
+        let cache = [];
+
+        function pad(num) { return num.toString().padStart(4, '0'); }
+        function srcFor(i) { return `masks/${sequenceEl.value}_frame_${pad(i)}.png`; }
+
+        function setIndex(i) {
+            current = i; indexEl.value = String(i);
+            viewer.src = srcFor(i);
+        }
+
+        function preloadAll() {
+            cache = [];
+            const total = Math.max(1, parseInt(totalEl.value, 10));
+            for (let i = 0; i < total; i++) {
+                const img = new Image();
+                img.src = srcFor(i);
+                cache.push(img);
+            }
+        }
+
+        function play() {
+            if (timer) return;
+            const fps = Math.max(1, parseInt(fpsEl.value, 10));
+            const total = Math.max(1, parseInt(totalEl.value, 10));
+            timer = setInterval(() => {
+                current += 1;
+                if (current >= total) {
+                    if (loopEl.value === '1') current = 0; else { pause(); return; }
+                }
+                setIndex(current);
+            }, 1000 / fps);
+        }
+
+        function pause() { if (timer) { clearInterval(timer); timer = null; } }
+
+        document.getElementById('btn-play').addEventListener('click', play);
+        document.getElementById('btn-pause').addEventListener('click', pause);
+        document.getElementById('btn-prev').addEventListener('click', () => { current = (current - 1 + parseInt(totalEl.value,10)) % parseInt(totalEl.value,10); setIndex(current); });
+        document.getElementById('btn-next').addEventListener('click', () => { current = (current + 1) % parseInt(totalEl.value,10); setIndex(current); });
+        document.getElementById('btn-reload').addEventListener('click', () => { pause(); if (preloadEl.value === '1') preloadAll(); setIndex(0); });
+        sequenceEl.addEventListener('change', () => { pause(); if (preloadEl.value === '1') preloadAll(); setIndex(0); });
+        totalEl.addEventListener('change', () => { indexEl.max = String(Math.max(0, parseInt(totalEl.value,10) - 1)); if (preloadEl.value === '1') preloadAll(); setIndex(Math.min(current, parseInt(totalEl.value,10)-1)); });
+        indexEl.addEventListener('input', () => { setIndex(parseInt(indexEl.value, 10)); });
+
+        // init
+        (function init(){
+            indexEl.max = String(Math.max(0, parseInt(totalEl.value,10) - 1));
+            setIndex(0);
+            if (preloadEl.value === '1') preloadAll();
+        })();
+    </script>
+</body>
+</html>
+

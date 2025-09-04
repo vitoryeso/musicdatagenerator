@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Loop Creator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 16px;
+        }
+        header { width: 100%; max-width: 960px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 1.8em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        a.link { color: #ffeb3b; text-decoration: underline; font-weight: 600; }
+        .container { width: 100%; max-width: 960px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .control { display: flex; flex-direction: column; gap: 6px; }
+        label { font-weight: 600; }
+        input[type="range"], input[type="number"] { width: 100%; }
+        .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        button { padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; }
+        .primary { background: #4CAF50; color: #0b1a10; }
+        .secondary { background: #ff9800; color: #1a0b00; }
+        canvas { background: radial-gradient(circle at center, #0a0a0a 0%, #1a1a1a 100%); border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); width: 100%; height: auto; }
+        .note { color: #e0e0e0; opacity: 0.85; font-size: 0.9em; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Simulador Loop Creator</h1>
+        <div class="row">
+            <a class="link" href="./index.html">Simulador Canvas</a>
+            <a class="link" href="./sim-masks.html">Simulador Masks</a>
+            <a class="link" href="./compare.html">Comparar Métodos</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="panel">
+            <div class="row" style="justify-content: space-between;">
+                <div class="row" style="gap: 6px;">
+                    <label><input type="radio" name="mode" value="local" checked> Modo: JS (Local)</label>
+                    <label><input type="radio" name="mode" value="api"> Modo: API (FastAPI)</label>
+                </div>
+                <span class="note">Endpoint API: <code id="api-url">http://localhost:8000/generate_loop</code></span>
+            </div>
+            <div class="grid" style="margin-top: 10px;">
+                <div class="control"><label>Duração (s)</label><input id="duration" type="number" min="0.5" max="10" value="2.0" step="0.1"></div>
+                <div class="control"><label>FPS</label><input id="fps" type="number" min="1" max="120" value="60"></div>
+                <div class="control"><label>Raio</label><input id="radius" type="range" min="50" max="250" value="150"></div>
+                <div class="control"><label>Loops</label><input id="loops" type="number" min="1" max="12" value="1"></div>
+                <div class="control"><label>Elasticidade</label><input id="elasticidade" type="range" min="0" max="1" value="0.5" step="0.05"></div>
+                <div class="control"><label>Fluidez</label><input id="fluidez" type="range" min="0" max="1" value="0.5" step="0.05"></div>
+                <div class="control"><label>Inércia</label><input id="inercia" type="range" min="0" max="1" value="0.5" step="0.05"></div>
+                <div class="control"><label>Amolecimento</label><input id="amolecimento" type="range" min="0" max="1" value="0.2" step="0.05"></div>
+                <div class="control"><label>Pré-roll (loops)</label><input id="pre_roll_loops" type="number" min="0" max="10" value="3"></div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+                <button class="primary" id="btn-generate">Gerar</button>
+                <button class="secondary" id="btn-play">Reproduzir</button>
+                <button class="secondary" id="btn-stop">Parar</button>
+                <button id="btn-prev">Anterior</button>
+                <button id="btn-next">Próximo</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <canvas id="lc-canvas" width="600" height="600"></canvas>
+            <div class="note" style="margin-top:8px;">Renderiza os frames gerados por JS ou API, aplicando orientação e squash & stretch.</div>
+        </div>
+    </div>
+
+    <script>
+        function clamp(value, lo, hi) { return value < lo ? lo : (value > hi ? hi : value); }
+
+        function generateLoopLocal(params) {
+            const loops = Math.max(1, Math.floor(params.loops));
+            const fps = Math.max(1, Math.floor(params.fps));
+            const N = Math.max(1, Math.round(params.duration_seconds * fps));
+            const dt = 1.0 / fps;
+            const T = N * dt;
+            const omega_target = (2.0 * Math.PI * loops) / T;
+
+            const zeta_pos = clamp(0.05 + 1.95 * params.fluidez, 0.05, 2.5);
+            let omega_n_pos = omega_target * (0.5 + 3.0 * clamp(params.elasticidade, 0.0, 1.0));
+            const zeta_orient = clamp(0.05 + 1.95 * params.fluidez, 0.05, 2.5);
+            let omega_n_orient = omega_target * (2.0 - 1.8 * clamp(params.inercia, 0.0, 1.0));
+            omega_n_orient = clamp(omega_n_orient, omega_target * 0.15, omega_target * 4.0);
+
+            const pre_loops = Math.max(0, Math.floor(params.pre_roll_loops));
+            const pre_duration = (pre_loops / loops) * T;
+            const pre_steps = Math.round(pre_duration / dt);
+
+            let theta = params.phase0_rad || 0.0;
+            let theta_d = omega_target;
+            let psi = theta + Math.PI * 0.5;
+            let psi_d = theta_d;
+
+            function step_once(t) {
+                const theta_target = (params.phase0_rad || 0.0) + omega_target * t;
+                const theta_target_d = omega_target;
+                const theta_dd = (omega_n_pos * omega_n_pos) * (theta_target - theta)
+                    + 2.0 * zeta_pos * omega_n_pos * (theta_target_d - theta_d);
+                theta_d += theta_dd * dt;
+                theta += theta_d * dt;
+
+                const psi_target = theta + Math.PI * 0.5;
+                const psi_target_d = theta_d;
+                const psi_dd = (omega_n_orient * omega_n_orient) * (psi_target - psi)
+                    + 2.0 * zeta_orient * omega_n_orient * (psi_target_d - psi_d);
+                psi_d += psi_dd * dt;
+                psi += psi_d * dt;
+            }
+
+            if (pre_steps > 0) {
+                let t = -pre_duration;
+                for (let i = 0; i < pre_steps; i++) { step_once(t); t += dt; }
+            }
+
+            const frames = [];
+            let t = 0.0;
+            for (let i = 0; i < N; i++) {
+                step_once(t);
+                const x = params.center_x + params.radius * Math.cos(theta);
+                const y = params.center_y + params.radius * Math.sin(theta);
+                const v = Math.abs(params.radius * theta_d);
+                const v_mean = Math.abs(params.radius * omega_target) + 1e-8;
+                const norm_speed = clamp((v - v_mean) / v_mean, -1.0, 1.0);
+                const stretch_gain = 0.6 * clamp(params.amolecimento, 0.0, 1.0);
+                const stretch = clamp(stretch_gain * norm_speed, -0.9, 1.5);
+                const scale_tangent = clamp(1.0 + stretch, 0.4, 2.5);
+                const scale_normal = clamp(1.0 / scale_tangent, 0.4, 2.5);
+                frames.push({ index: i, time: t, x, y, travel_angle: theta, orientation: psi, scale_tangent, scale_normal });
+                t += dt;
+            }
+            return frames;
+        }
+
+        const canvas = document.getElementById('lc-canvas');
+        const ctx = canvas.getContext('2d');
+        const center = { x: canvas.width / 2, y: canvas.height / 2 };
+        let frames = [];
+        let playing = false;
+        let current = 0;
+        let timer = null;
+
+        function drawOrbit(radius) {
+            ctx.strokeStyle = '#424242';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawFrame(frame, radius) {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.25)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawOrbit(radius);
+
+            ctx.save();
+            ctx.translate(frame.x, frame.y);
+            ctx.rotate(frame.orientation);
+            ctx.scale(frame.scale_tangent, frame.scale_normal);
+            const size = 20;
+            const gradient = ctx.createRadialGradient(-size * 0.3, -size * 0.3, 0, 0, 0, size);
+            gradient.addColorStop(0, 'rgba(255,255,255,0.4)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(0, 0, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function render() {
+            if (frames.length === 0) return;
+            const frame = frames[current];
+            drawFrame(frame, parseFloat(document.getElementById('radius').value));
+        }
+
+        function play() {
+            if (playing || frames.length === 0) return;
+            playing = true;
+            const fps = Math.max(1, parseInt(document.getElementById('fps').value, 10));
+            timer = setInterval(() => {
+                current = (current + 1) % frames.length;
+                render();
+            }, 1000 / fps);
+        }
+
+        function stop() {
+            playing = false;
+            if (timer) clearInterval(timer);
+            timer = null;
+        }
+
+        function collectParams() {
+            return {
+                duration_seconds: parseFloat(document.getElementById('duration').value),
+                fps: parseInt(document.getElementById('fps').value, 10),
+                radius: parseFloat(document.getElementById('radius').value),
+                center_x: center.x,
+                center_y: center.y,
+                phase0_rad: 0.0,
+                elasticidade: parseFloat(document.getElementById('elasticidade').value),
+                fluidez: parseFloat(document.getElementById('fluidez').value),
+                inercia: parseFloat(document.getElementById('inercia').value),
+                amolecimento: parseFloat(document.getElementById('amolecimento').value),
+                loops: parseInt(document.getElementById('loops').value, 10),
+                pre_roll_loops: parseInt(document.getElementById('pre_roll_loops').value, 10),
+            };
+        }
+
+        function getMode() {
+            const el = document.querySelector('input[name="mode"]:checked');
+            return el ? el.value : 'local';
+        }
+
+        async function generate() {
+            stop();
+            const params = collectParams();
+            if (getMode() === 'api') {
+                try {
+                    const res = await fetch(document.getElementById('api-url').textContent, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
+                    const data = await res.json();
+                    frames = data.frames || [];
+                } catch (e) {
+                    console.error(e);
+                    alert('Falha ao chamar a API. Verifique se o servidor FastAPI está rodando na porta 8000.');
+                    frames = [];
+                }
+            } else {
+                frames = generateLoopLocal(params);
+            }
+            current = 0;
+            ctx.fillStyle = 'rgba(10,10,10,1)';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            render();
+        }
+
+        document.getElementById('btn-generate').addEventListener('click', generate);
+        document.getElementById('btn-play').addEventListener('click', play);
+        document.getElementById('btn-stop').addEventListener('click', stop);
+        document.getElementById('btn-prev').addEventListener('click', () => { current = (current - 1 + frames.length) % frames.length; render(); });
+        document.getElementById('btn-next').addEventListener('click', () => { current = (current + 1) % frames.length; render(); });
+
+        // Inicializa estado
+        (function init() {
+            ctx.fillStyle = 'rgba(10,10,10,1)';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            drawOrbit(parseFloat(document.getElementById('radius').value));
+        })();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparativo de Métodos - Frontend Experts Academy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 24px;
+        }
+        header { display: flex; align-items: center; justify-content: space-between; }
+        h1 { font-size: 1.8rem; }
+        .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        .card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+        }
+        .col-4 { grid-column: span 4; }
+        .col-6 { grid-column: span 6; }
+        .col-12 { grid-column: span 12; }
+        .title { font-size: 1.2rem; margin-bottom: 8px; font-weight: 600; }
+        .media { width: 100%; border-radius: 10px; background: #0b1220; }
+        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 999px; background: #0ea5e9; color: #001018; font-weight: 700; }
+        .controls { display: flex; gap: 8px; align-items: center; }
+        button { border: 0; border-radius: 8px; background: #22c55e; color: #051b11; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+        button.secondary { background: #64748b; color: #0b1220; }
+        .option { display: flex; align-items: center; gap: 10px; }
+        .note { font-size: 0.875rem; color: #94a3b8; margin-top: 8px; }
+        .thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+        .thumbs img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+        @media (max-width: 1024px) {
+            .col-4, .col-6 { grid-column: span 12; }
+        }
+    </style>
+    <script>
+        function selectMethod(methodId) {
+            localStorage.setItem('fea:selected_method', methodId);
+            const badge = document.getElementById('selected-badge');
+            if (badge) {
+                badge.textContent = 'Selecionado: ' + methodId;
+            }
+        }
+
+        function restoreSelection() {
+            const saved = localStorage.getItem('fea:selected_method');
+            if (saved) {
+                const badge = document.getElementById('selected-badge');
+                if (badge) badge.textContent = 'Selecionado: ' + saved;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', restoreSelection);
+    </script>
+    <link rel="preload" as="image" href="/mnt/c/Users/vitor/work/musicdatagenerator/gifs/complex_loops_circular.gif">
+    <link rel="preload" as="image" href="/mnt/c/Users/vitor/work/musicdatagenerator/gifs/complex_loops_square.gif">
+    <link rel="preload" as="image" href="/mnt/c/Users/vitor/work/musicdatagenerator/gifs/complex_loops_trail.gif">
+</head>
+<body>
+    <header>
+        <h1>Comparativo de Métodos de Efeitos Especiais</h1>
+        <div class="row">
+            <span class="badge" id="selected-badge">Nenhum selecionado</span>
+            <a href="./index.html"><button class="secondary">Voltar ao Simulador</button></a>
+        </div>
+    </header>
+
+    <div class="grid">
+        <section class="card col-4">
+            <div class="title">1) loop_creator (Python)</div>
+            <div class="note">Arquivos: <code>loop_creator/</code>, <code>scripts/export_loop.py</code></div>
+            <div class="thumbs">
+                <img class="media" src="gifs/complex_loops_circular.gif" alt="complex_loops_circular">
+                <img class="media" src="gifs/complex_loops_square.gif" alt="complex_loops_square">
+                <img class="media" src="gifs/complex_loops_trail.gif" alt="complex_loops_trail">
+            </div>
+            <div class="note">Gera loops procedurais com parâmetros físicos exportáveis.</div>
+            <div class="option">
+                <input type="radio" name="method" id="m1" onclick="selectMethod('loop_creator')">
+                <label for="m1">Escolher loop_creator</label>
+            </div>
+        </section>
+
+        <section class="card col-4">
+            <div class="title">2) index.html (WebCanvas)</div>
+            <div class="note">Arquivos: <code>index.html</code>, <code>physics.js</code>, <code>renderer.js</code>, <code>main.js</code></div>
+            <div style="aspect-ratio:1/1; background:#0b1220; border-radius:10px; overflow:hidden;">
+                <iframe src="index.html" title="Simulador" style="width:100%; height:100%; border:0; background:#0b1220;"></iframe>
+            </div>
+            <div class="note">Renderização em tempo real no browser com controles interativos.</div>
+            <div class="option">
+                <input type="radio" name="method" id="m2" onclick="selectMethod('index_html_canvas')">
+                <label for="m2">Escolher index.html</label>
+            </div>
+        </section>
+
+        <section class="card col-4">
+            <div class="title">3) masks_generator.py (Frames)</div>
+            <div class="note">Pastas: <code>masks/</code> (frames PNG sequenciais)</div>
+            <div class="controls" style="margin: 8px 0;">
+                <button onclick="prevFrame()">Anterior</button>
+                <button onclick="togglePlay()" class="secondary" id="playBtn">Reproduzir</button>
+                <button onclick="nextFrame()">Próximo</button>
+            </div>
+            <img id="maskFrame" class="media" src="masks/circular_complex_loops_frame_0000.png" alt="mask frame">
+            <div class="note">Player de sequências geradas por script (60 fps simulados).</div>
+            <div class="option">
+                <input type="radio" name="method" id="m3" onclick="selectMethod('masks_generator')">
+                <label for="m3">Escolher masks_generator.py</label>
+            </div>
+        </section>
+
+        <section class="card col-12">
+            <div class="title">Notas e Critérios de Avaliação</div>
+            <ul style="margin-left: 18px; margin-top: 8px; line-height: 1.6;">
+                <li>Facilidade de integração no Frontend Experts Academy</li>
+                <li>Performance no browser (FPS, uso de CPU/GPU)</li>
+                <li>Controle artístico (parâmetros e previsibilidade)</li>
+                <li>Portabilidade e manutenção</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        const maskPrefix = 'masks/circular_complex_loops_frame_';
+        const pad = (n) => n.toString().padStart(4, '0');
+        const totalFrames = 60;
+        let current = 0;
+        let playing = false;
+        let timer = null;
+
+        function updateFrame() {
+            const img = document.getElementById('maskFrame');
+            img.src = `${maskPrefix}${pad(current)}.png`;
+        }
+        function prevFrame() { current = (current - 1 + totalFrames) % totalFrames; updateFrame(); }
+        function nextFrame() { current = (current + 1) % totalFrames; updateFrame(); }
+        function togglePlay() {
+            const btn = document.getElementById('playBtn');
+            if (!playing) {
+                playing = true;
+                btn.textContent = 'Pausar';
+                timer = setInterval(nextFrame, 1000/24);
+            } else {
+                playing = false;
+                btn.textContent = 'Reproduzir';
+                clearInterval(timer);
+            }
+        }
+    </script>
+</body>
+</html>
+
